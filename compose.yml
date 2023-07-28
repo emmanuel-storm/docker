@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}" ]
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      PORT: 3000
+      DATABASE_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@mariadb:3306/${MYSQL_DATABASE}"
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "${HOST_PORT}:3000"
+    volumes:
+      - ./src:app/src
+
+volumes:
+  mariadb_data:
